@@ -11,12 +11,7 @@ import java.lang.reflect.Method;
 
 public class KyleTests {
     private Kyle kyle;
-    private BoardSquare normal = new TestBoardSquare(InternalBoardSquare.SquareType.NORMAL);
-    private BoardSquare rock = new TestBoardSquare(InternalBoardSquare.SquareType.ROCK);
-    private BoardSquare wall = new TestBoardSquare(InternalBoardSquare.SquareType.WALL);
-    private BoardSquare fogRock = new TestBoardSquare(InternalBoardSquare.SquareType.FOGROCK);
-    private BoardSquare opponents = new TestBoardSquare(Color.BLUE);
-    private BoardSquare mine = new TestBoardSquare(Color.RED);
+    private Color color = Color.RED;
 
     private MoveRequest.MoveType getMoveType(MoveRequest request){
         try {
@@ -36,147 +31,267 @@ public class KyleTests {
     }
 
     @Test
-    public void shouldMoveFoward(){
+    public void shouldMoveForwardWhenOpponentsColor(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {normal,normal,normal},
-            {normal,normal,normal},
-            {normal,normal,normal}
-        };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(type, MoveRequest.MoveType.FORWARD);
-    }
-
-    @Test
-    public void shouldTurnRightWhenForwardIsBlockedByRock(){
-        BoardSquare[][] scan = new BoardSquare[][] {
-            {normal,rock,normal},
-            {normal,normal,normal},
-            {normal,normal,normal}
-        };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, type);
-    }
-
-    @Test
-    public void shouldTurnRightWhenForwardIsBlockedByWall(){
-        BoardSquare[][] scan = new BoardSquare[][] {
-            {normal,wall,normal},
-            {normal,normal,normal},
-            {normal,normal,normal}
-        };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, type);
-    }
-
-    @Test
-    public void shouldTurnRightWhenForwardIsBlockedByFogRock(){
-        BoardSquare[][] scan = new BoardSquare[][] {
-            {normal,fogRock,normal},
-            {normal,normal,normal},
-            {normal,normal,normal}
-        };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, type);
-    }
-
-    @Test
-    public void shouldTurnLeftWhenForwardAndRightAreBlocked(){
-        BoardSquare[][] scan = new BoardSquare[][] {
-            {normal,rock,normal},
-            {normal,normal,rock},
-            {normal,normal,normal}
-        };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_LEFT, type);
-    }
-
-    @Test
-    public void shouldGetBoardSquareInFrontOfCurrentPosition(){
-        BoardSquare[][] scan = new BoardSquare[][] {
-            {normal, rock, normal},
-            {normal, normal, normal},
-            {normal, normal, normal}
+            {TestUtils.normal, TestUtils.opponents, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
 
-        assertEquals(rock, kyle.getBoardSquareInFront(scan));
+        assertEquals(MoveRequest.MoveType.FORWARD, kyle.getLevelOneMove(new Position(scan, color)));
     }
 
     @Test
-    public void shouldGetBoardSquareToRightOfCurrentPosition(){
+    public void shouldNotMoveForwardWhenBlocked(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {normal, normal, normal},
-            {normal, normal, rock},
-            {normal, normal, normal}
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
 
-        assertEquals(rock, kyle.getBoardSquareToRight(scan));
+        assertNotSame(MoveRequest.MoveType.FORWARD, kyle.getLevelOneMove(new Position(scan, color)));
     }
 
     @Test
-    public void shouldGetBoardSquareToLeftOfCurrentPosition(){
+    public void shouldNotMoveForwardWhenNotOpponentsColor(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {normal, normal, normal},
-            {rock, normal, normal},
-            {normal, normal, normal}
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+        assertNotSame(MoveRequest.MoveType.FORWARD, kyle.getLevelOneMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldRotateLeftWhenNotBlockedAndOpponentsColorForwardBlocked(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.opponents, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+ 
+        assertEquals(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelOneMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotRotateLeftWhenBlockedAndForwardBlocked(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
 
-        assertEquals(rock, kyle.getBoardSquareToLeft(scan));
+        assertNotSame(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelOneMove(new Position(scan, color)));
     }
 
     @Test
-    public void shouldGetBoardSquareInFrontOfCurrentPositionWithLargerGrid(){
+    public void shouldNotRotateLeftWhenNotOpponentsColor(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {normal, normal, normal, normal, normal},
-            {normal, normal, rock, normal, normal},
-            {normal, normal, normal, normal, normal},
-            {normal, normal, normal, normal, normal},
-            {normal, normal, normal, normal, normal},
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
 
-        assertEquals(rock, kyle.getBoardSquareInFront(scan));
+        assertNotSame(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelOneMove(new Position(scan, color)));
     }
 
     @Test
-    public void shouldReturnTrueWhenSquareHasOpponentsColor(){
-        assertTrue(kyle.isOpponentsSquare(opponents));
-    }
-
-    @Test
-    public void shouldReturnFalseWhenSquareHasMyColor(){
-        assertFalse(kyle.isOpponentsSquare(mine));
-    }
-
-    @Test
-    public void shouldGetOpponentsColor(){
-        assertEquals(Color.BLUE, kyle.getOpponentsColor());
-    }
-
-    @Test
-    public void shouldMoveToLeftWhenRightHasOwnColor(){
+    public void shouldRotateRightWhenFrontAndLeftAreBlockedAndNotBlockedAndOpponentsColor(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {rock, rock, rock},
-            {normal, normal, mine},
-            {normal, normal, normal}
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.opponents},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_LEFT, type);
+
+        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelOneMove(new Position(scan, color)));
     }
 
     @Test
-    public void shouldMoveToRightWhenLeftHasOwnColor(){
+    public void shouldNotRotateRightWhenFrontAndLeftAreBlockedAndBlocked(){
         BoardSquare[][] scan = new BoardSquare[][] {
-            {rock, rock, rock},
-            {mine, normal, normal},
-            {normal, normal, normal}
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.wall},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
         };
-        MoveRequest request = kyle.getMove(scan, null);
-        MoveRequest.MoveType type = this.getMoveType(request);
-        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, type);
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelOneMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotRotateRightWhenFrontAndLeftAreBlockedAndNotOpponentsColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelOneMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveFowardWhenNotOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.FORWARD, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveFowardWhenBlocked(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.FORWARD, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+
+    @Test
+    public void shouldNotMoveFowardWhenOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.FORWARD, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveLeftWhenNotOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveLeftWhenBlocked(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+
+    @Test
+    public void shouldNotMoveLeftWhenOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveRightWhenNotOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveRightWhenBlocked(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.wall},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveRightWhenOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.wall, TestUtils.normal},
+            {TestUtils.wall, TestUtils.normal, TestUtils.mine},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelTwoMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveForwardWhenNotBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.mine},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.FORWARD, kyle.getLevelThreeMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveForwardWhenBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.mine},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.FORWARD, kyle.getLevelThreeMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveRightWhenNotBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.mine},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelThreeMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveRightWhenBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.rock},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_RIGHT, kyle.getLevelThreeMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldMoveLeftWhenNotBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.mine, TestUtils.normal, TestUtils.rock},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertEquals(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelThreeMove(new Position(scan, color)));
+    }
+
+    @Test
+    public void shouldNotMoveLeftWhenBlockedAndSurroundedByOwnColor(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.rock, TestUtils.normal},
+            {TestUtils.rock, TestUtils.normal, TestUtils.rock},
+            {TestUtils.normal, TestUtils.mine, TestUtils.normal}
+        };
+
+        assertNotSame(MoveRequest.MoveType.ROTATE_LEFT, kyle.getLevelThreeMove(new Position(scan, color)));
     }
 }

@@ -2,7 +2,6 @@ import paintbots.BoardSquare;
 import paintbots.InternalBoardSquare;
 import paintbots.MoveRequest;
 import paintbots.PaintbotControl;
-
 import java.awt.*;
 
 public class Kyle extends PaintbotControl {
@@ -11,56 +10,58 @@ public class Kyle extends PaintbotControl {
 
     @Override
     public MoveRequest getMove(BoardSquare[][] shortScan, BoardSquare[][] longScan) {
-        MoveRequest.MoveType type = MoveRequest.MoveType.FORWARD;
+        Position position = new Position(shortScan, color);
+        MoveRequest.MoveType type = getLevelOneMove(position);
 
-        if (isBlocked(getBoardSquareInFront(shortScan))){
-            BoardSquare right = getBoardSquareToRight(shortScan);
-            if (isBlocked(right) || right.getSquareColor().equals(color))
-                type = MoveRequest.MoveType.ROTATE_LEFT;
-            else
-                type = MoveRequest.MoveType.ROTATE_RIGHT;
-        }
+        if (type == null)
+            type = getLevelTwoMove(position);
+
+        if (type == null)
+            type = getLevelThreeMove(position);
+
+        if (type == null)
+            type = MoveRequest.MoveType.ROTATE_RIGHT;
 
         return new MoveRequest(type, false, false);
     }
 
-    private boolean isBlocked(BoardSquare square) {
-        return isSquareRock(square) || isSquareWall(square) || isSquareFogRock(square);
+    public MoveRequest.MoveType getLevelOneMove(Position position) {
+        MoveRequest.MoveType type = null;
+
+        if (!position.inFront().isBlocked() && position.inFront().isOpponentsSquare())
+            type = MoveRequest.MoveType.FORWARD;
+        else if (!position.onLeft().isBlocked() && position.onLeft().isOpponentsSquare())
+            type = MoveRequest.MoveType.ROTATE_LEFT;
+        else if (!position.onRight().isBlocked() && position.onRight().isOpponentsSquare())
+            type = MoveRequest.MoveType.ROTATE_RIGHT;
+
+        return type;
     }
 
-    private boolean isSquareFogRock(BoardSquare square) {
-        return square.getSquareType().equals(InternalBoardSquare.SquareType.FOGROCK);
-    }
+    public MoveRequest.MoveType getLevelTwoMove(Position position) {
+        MoveRequest.MoveType type = null;
 
-    private boolean isSquareWall(BoardSquare square) {
-        return square.getSquareType().equals(InternalBoardSquare.SquareType.WALL);
-    }
+        if (!position.inFront().isBlocked() && !position.inFront().isMySquare())
+            type = MoveRequest.MoveType.FORWARD;
+        else if(!position.onLeft().isBlocked() && !position.onLeft().isMySquare())
+            type = MoveRequest.MoveType.ROTATE_LEFT;
+        else if (!position.onRight().isBlocked() && !position.onRight().isMySquare())
+            type = MoveRequest.MoveType.ROTATE_RIGHT;
 
-    private boolean isSquareRock(BoardSquare square) {
-        return square.getSquareType().equals(InternalBoardSquare.SquareType.ROCK);
-    }
+        return type;
+    }    
 
-    public BoardSquare getBoardSquareInFront(BoardSquare[][] scan) {
-        int center = scan.length / 2;
-        return scan[center - 1][center];
-    }
+    public MoveRequest.MoveType getLevelThreeMove(Position position) {
+        MoveRequest.MoveType type = null;
 
-    public BoardSquare getBoardSquareToRight(BoardSquare[][] scan) {
-        int center = scan.length / 2;
-        return scan[center][center + 1];
-    }
+        if (!position.inFront().isBlocked())
+            type = MoveRequest.MoveType.FORWARD;
+        else if (!position.onRight().isBlocked())
+            type = MoveRequest.MoveType.ROTATE_RIGHT;
+        else if (!position.onLeft().isBlocked())
+            type = MoveRequest.MoveType.ROTATE_LEFT;
 
-    public BoardSquare getBoardSquareToLeft(BoardSquare[][] scan) {
-        int center = scan.length / 2;
-        return scan[center][center - 1];
-    }
-
-    public boolean isOpponentsSquare(BoardSquare square) {
-        return square.getSquareColor().equals(getOpponentsColor());
-    }
-
-    public Color getOpponentsColor() {
-        return color == Color.RED ? Color.BLUE : Color.RED;
+        return type;        
     }
 
     @Override
@@ -87,5 +88,6 @@ public class Kyle extends PaintbotControl {
     public void reset(Color color) {
         this.color = color;
     }
+
 }
 

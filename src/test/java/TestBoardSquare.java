@@ -5,6 +5,8 @@ import java.awt.*;
 public class TestBoardSquare implements BoardSquare {
     private InternalBoardSquare.SquareType squareType = InternalBoardSquare.SquareType.NORMAL;
     private Color color = Color.WHITE;
+    private boolean redRobotPresent;
+    private boolean blueRobotPresent;
 
     public TestBoardSquare(InternalBoardSquare.SquareType squareType) {
         this.squareType = squareType;
@@ -14,16 +16,21 @@ public class TestBoardSquare implements BoardSquare {
         this.color = color;
     }
 
+    public TestBoardSquare(boolean redRobotPresent, boolean blueRobotPresent){
+        this.redRobotPresent = redRobotPresent;
+        this.blueRobotPresent = blueRobotPresent;
+    }
+
     public Color getSquareColor() {
         return color;
     }
 
     public boolean redRobotPresent() {
-        return false;
+        return redRobotPresent;
     }
 
     public boolean blueRobotPresent() {
-        return false;
+        return blueRobotPresent;
     }
 
     public int robotDirection() {
