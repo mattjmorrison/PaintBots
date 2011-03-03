@@ -22,6 +22,32 @@ public class PositionTests {
     }
 
     @Test
+    public void shouldGetTwoBoardSquaresInFrontOfCurrentPosition(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.wall, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.rock, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+        Position position = new Position(scan, null);
+        assertEquals(TestUtils.wall, position.inFront().getNextSquare());
+    }
+
+    @Test
+    public void shouldGetTwoBoardSquaresBehindCurrentPosition(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.rock, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.wall, TestUtils.normal, TestUtils.normal}
+        };
+        Position position = new Position(scan, null);
+        assertEquals(TestUtils.wall, position.behind().getNextSquare());
+    }
+
+    @Test
     public void shouldGetBoardSquareBehindCurrentPosition(){
         BoardSquare[][] scan = new BoardSquare[][] {
             {TestUtils.normal, TestUtils.normal, TestUtils.normal},
@@ -45,6 +71,19 @@ public class PositionTests {
     }
 
     @Test
+    public void shouldGetTwoBoardSquaresRightOfCurrentPosition(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.rock, TestUtils.wall},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+        Position position = new Position(scan, null);
+        assertEquals(TestUtils.wall, position.onRight().getNextSquare());
+    }
+
+    @Test
     public void shouldGetBoardSquareToLeftOfCurrentPosition(){
         BoardSquare[][] scan = new BoardSquare[][] {
             {TestUtils.normal, TestUtils.normal, TestUtils.normal},
@@ -53,6 +92,19 @@ public class PositionTests {
         };
 
         assertEquals(TestUtils.rock, new Position(scan, null).onLeft().getSquare());
+    }
+
+    @Test
+    public void shouldGetTwoBoardSquaresLeftOfCurrentPosition(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.wall, TestUtils.rock, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal}
+        };
+        Position position = new Position(scan, null);
+        assertEquals(TestUtils.wall, position.onLeft().getNextSquare());
     }
 
     @Test
@@ -70,37 +122,37 @@ public class PositionTests {
 
     @Test
     public void shouldReturnTrueWhenSquareHasOpponentsColor(){
-        assertTrue(new Position.Square(TestUtils.opponents, Color.RED).isOpponentsSquare());
+        assertTrue(new Position.Square(TestUtils.opponents, null, Color.RED).isOpponentsSquare());
     }
 
     @Test
     public void shouldReturnFalseWhenSquareHasMyColor(){
-        assertFalse(new Position.Square(TestUtils.mine, color).isOpponentsSquare());
+        assertFalse(new Position.Square(TestUtils.mine, null, color).isOpponentsSquare());
     }
 
     @Test
     public void shouldGetOpponentsColor(){
-        assertEquals(Color.BLUE, new Position.Square(null, color).getOpponentsColor());
+        assertEquals(Color.BLUE, new Position.Square(null, null, color).getOpponentsColor());
     }
 
     @Test
     public void shouldReturnTrueWhenSquareHasMyColor(){
-        assertTrue(new Position.Square(TestUtils.mine, color).isMySquare());
+        assertTrue(new Position.Square(TestUtils.mine, null, color).isMySquare());
     }
 
     @Test
     public void shouldReturnFalseWhenSquareHasOpponentsColor(){
-        assertFalse(new Position.Square(TestUtils.opponents, color).isMySquare());
+        assertFalse(new Position.Square(TestUtils.opponents, null, color).isMySquare());
     }
 
     @Test
     public void shouldReturnTrueWhenRedRobotIsPresent(){
-        assertTrue(new Position.Square(TestUtils.redRobot, color).isBlocked());
+        assertTrue(new Position.Square(TestUtils.redRobot, null, color).isBlocked());
     }
 
     @Test
     public void shouldReturnTrueWhenBlueRobotIsPresent(){
-        assertTrue(new Position.Square(TestUtils.blueRobot, color).isBlocked());
+        assertTrue(new Position.Square(TestUtils.blueRobot, null, color).isBlocked());
     }
 
     @Test
@@ -144,5 +196,33 @@ public class PositionTests {
             {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
         };
         assertFalse(new Position(scan, Color.RED).allSurrounding().areMine());
+    }
+
+    @Test
+    public void shouldBeBlockedWhenOpponentIsWithinTwoSquares(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.normal, TestUtils.normal, TestUtils.blueRobot, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+        };
+
+        Position position = new Position(scan, Color.RED);
+        assertTrue(position.inFront().isBlocked());
+    }
+
+    @Test
+    public void shouldBeBlockedFromFrontAndLeftWhenOpponentIsWithinScan(){
+        BoardSquare[][] scan = new BoardSquare[][] {
+            {TestUtils.blueRobot, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+            {TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal, TestUtils.normal},
+        };
+        Position position = new Position(scan, Color.RED);
+        assertTrue(position.inFront().isBlocked());
+        assertTrue(position.onLeft().isBlocked());
     }
 }

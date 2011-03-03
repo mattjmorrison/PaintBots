@@ -10,9 +10,12 @@ public class Position {
 
     public static class Square {
         private BoardSquare square;
+        private BoardSquare nextSquare;
         private Color color;
-        public Square(BoardSquare square, Color color){
+
+        public Square(BoardSquare square, BoardSquare nextSquare, Color color){
             this.square = square;
+            this.nextSquare = nextSquare;
             this.color = color;
         }
 
@@ -21,7 +24,8 @@ public class Position {
                     || isSquareWall()
                     || isSquareFogRock()
                     || square.redRobotPresent()
-                    || square.blueRobotPresent();
+                    || square.blueRobotPresent()
+                    || (nextSquare != null && (nextSquare.blueRobotPresent() || nextSquare.redRobotPresent()));
         }
 
         public boolean isSquareFogRock() {
@@ -50,6 +54,10 @@ public class Position {
 
         public BoardSquare getSquare(){
             return square;
+        }
+
+        public BoardSquare getNextSquare() {
+            return nextSquare;
         }
     }
 
@@ -82,22 +90,38 @@ public class Position {
 
     public Square onRight() {
         int center = grid.length / 2;
-        return new Square(grid[center][center + 1], color);
+        BoardSquare nextSquare = null;
+        if (center > 1){
+            nextSquare = grid[center][center + 2];
+        }
+        return new Square(grid[center][center + 1], nextSquare, color);
     }
 
     public Square onLeft() {
         int center = grid.length / 2;
-        return new Square(grid[center][center - 1], color);
+        BoardSquare nextSquare = null;
+        if (center > 1){
+            nextSquare = grid[center][center - 2];
+        }
+        return new Square(grid[center][center - 1], nextSquare, color);
     }
 
     public Square inFront() {
         int center = grid.length / 2;
-        return new Square(grid[center - 1][center], color);
+        BoardSquare nextSquare = null;
+        if (center > 1){
+            nextSquare = grid[center - 2][center];
+        }
+        return new Square(grid[center - 1][center], nextSquare, color);
     }
 
     public Square behind() {
         int center = grid.length / 2;
-        return new Square(grid[center + 1][center], color);
+        BoardSquare nextSquare = null;
+        if (center > 1){
+            nextSquare = grid[center + 2][center];
+        }
+        return new Square(grid[center + 1][center], nextSquare, color);
     }
 
     public SurroundingSquares allSurrounding() {
